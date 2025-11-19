@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+
+<!-- Must match appSecurityConfig, loginProcessingUrl -->
+<form th:action="@{/authenticate}" method="post"
+      class="bg-white p-8 rounded-2xl shadow-md w-full max-w-md space-y-5">
+
+  <h2 class="text-2xl font-bold text-center text-gray-800">Sign in</h2>
+
+  <!-- Error message /login?error = TRUE -->
+  <div th:if="${param.error}"
+       class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-center">
+    Invalid username or password.
+  </div>
+
+  <!-- Success message when user logs out /login?logout = TRUE -->
+  <div th:if="${param.logout}"
+       class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative text-center">
+    You have been logged out successfully.
+  </div>
+
+  <!-- Username -->
+  <div>
+    <label for="username" class="block text-gray-700 font-medium mb-1">Username</label>
+    <input type="text" id="username" name="username"
+           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+  </div>
+
+  <!-- Password -->
+  <div>
+    <label for="password" class="block text-gray-700 font-medium mb-1">Password</label>
+    <input type="password" id="password" name="password"
+           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+  </div>
+
+  <!-- Remember Me -->
+  <div class="flex items-center">
+    <input type="checkbox" id="remember-me" name="remember-me" class="mr-2">
+    <label for="remember-me" class="text-gray-700 text-sm">Remember me</label>
+  </div>
+
+  <!-- Submit Button -->
+  <div>
+    <button type="submit"
+            class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+      Login
+    </button>
+  </div>
+
+  <!-- Optional link -->
+  <p class="text-center text-sm text-gray-500">
+    Don’t have an account?
+    <a th:href="@{/register}" class="text-blue-600 hover:underline">Register here</a>
+  </p>
+
+</form>
+
+</body>
+</html>
