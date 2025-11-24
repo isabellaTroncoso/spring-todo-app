@@ -18,13 +18,6 @@ import java.util.UUID;
 @Entity
 public class CustomUser {
 
-    /** UUID
-     * + Harder to accidentally expose
-     * + Scales better in Global Apps (non-monolithic)
-     * + Unique serial Key
-     * - Harder to debug
-     * - 16 bytes (2x larger than Long)
-     * */
     @Id @GeneratedValue(strategy = GenerationType.UUID)
     @Column(updatable = false, nullable = false)
     private UUID id;
@@ -73,7 +66,6 @@ public class CustomUser {
         return password;
     }
 
-    // TODO - Param injection, alternatives that are smoother that doesn't require manual param passing
     public void setPassword(String password, PasswordEncoder passwordEncoder) {
         this.password = passwordEncoder.encode(password);
     }

@@ -33,11 +33,20 @@ public record CustomUserCreationDTO(
         // @NotNull @AssertTrue boolean acceptAppTerms, // Expect the result NOT to be null, NOT to be False
 
         @NotEmpty // Map, Collections, Array
-        @Pattern(
-                regexp = "^(GUEST|USER|ADMIN)$",
-                message = "Must be a Valid Role"
-        )
         Set<UserRole> roles
 
 ) {
+
+        // Factory-metod för Thymeleaf: skapar en “tom” instans med defaultvärden
+        public static CustomUserCreationDTO empty() {
+                return new CustomUserCreationDTO(
+                        "",
+                        "",
+                        true,
+                        true,
+                        true,
+                        true,
+                        Set.of(UserRole.USER)
+                );
+        }
 }
