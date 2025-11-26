@@ -24,16 +24,10 @@ public record CustomUserCreationDTO(
                 message = "Password must contain at least one uppercase, one lowercase, one digit, and one special character"
         )
         @Size(max = 80, message = "Maximum length of password exceeded")
-        String password,
+        String password
 
-        @NotNull boolean isAccountNonExpired,
-        @NotNull boolean isAccountNonLocked,
-        @NotNull boolean isCredentialsNonExpired,
-        @NotNull boolean isEnabled,
-        // @NotNull @AssertTrue boolean acceptAppTerms, // Expect the result NOT to be null, NOT to be False
-
-        @NotEmpty // Map, Collections, Array
-        Set<UserRole> roles
+       /* @NotEmpty // Map, Collections, Array
+        Set<UserRole> roles*/
 
 ) {
 
@@ -41,12 +35,8 @@ public record CustomUserCreationDTO(
         public static CustomUserCreationDTO empty() {
                 return new CustomUserCreationDTO(
                         "",
-                        "",
-                        true,
-                        true,
-                        true,
-                        true,
-                        Set.of(UserRole.USER)
+                        ""
+                     /*   Set.of(UserRole.USER)*/
                 );
         }
 }

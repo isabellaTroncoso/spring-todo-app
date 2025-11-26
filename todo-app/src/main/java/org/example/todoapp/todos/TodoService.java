@@ -1,5 +1,6 @@
 package org.example.todoapp.todos;
 import org.example.todoapp.user.custom.CustomUser;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,26 +12,37 @@ public class TodoService {
 
     private final TodoRepository todoRepository;
 
+    @Autowired
     public TodoService(TodoRepository todoRepository) {
         this.todoRepository = todoRepository;
     }
 
-    public Todo createTodo(Todo todo) {
-        return todoRepository.save(todo);
+    // Hämta alla todos för en user
+    public List<Todo> getTodosForUser(CustomUser user) {
+        return todoRepository.findByUser(user);
     }
 
-    public Optional<Todo> getTodoById(UUID id) {
-        return todoRepository.findById(id);
-    }
-
-    public List<Todo> getTodosByUser(CustomUser user) {
-        return todoRepository.findAllByUser(user);
-    }
-
+    // Hämta alla todos (Admin)
     public List<Todo> getAllTodos() {
         return todoRepository.findAll();
     }
 
+    // Hämta todo by id
+    public Optional<Todo> getTodoById(UUID id) {
+        return todoRepository.findById(id);
+    }
+
+    // Skapa todo
+    public Todo createTodo(Todo todo) {
+        return todoRepository.save(todo);
+    }
+
+    // Uppdatera todo
+    public Todo updateTodo(Todo todo) {
+        return todoRepository.save(todo);
+    }
+
+    // Radera todo
     public void deleteTodo(UUID id) {
         todoRepository.deleteById(id);
     }

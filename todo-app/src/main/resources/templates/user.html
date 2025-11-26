@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Todos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+
+<h1 class="text-2xl font-bold mb-4">Todos for <span th:text="${username}"></span></h1>
+
+<table class="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+    <thead>
+    <tr>
+        <th class="px-4 py-2 border">Title</th>
+        <th class="px-4 py-2 border">Description</th>
+        <th class="px-4 py-2 border">Completed</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="todo : ${todos}">
+        <td class="px-4 py-2 border" th:text="${todo.title}"></td>
+        <td class="px-4 py-2 border" th:text="${todo.description}"></td>
+        <td class="px-4 py-2 border" th:text="${todo.completed}"></td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

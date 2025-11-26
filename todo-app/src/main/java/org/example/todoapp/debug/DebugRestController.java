@@ -25,7 +25,6 @@ import java.util.Set;
 @RequestMapping("/debug")
 public class DebugRestController {
 
-    // private final AppPasswordConfig appPasswordConfig; // ANTI-PATTERN (This is a config)
     private final PasswordEncoder passwordEncoder;
     private final CustomUserRepository customUserRepository;
 

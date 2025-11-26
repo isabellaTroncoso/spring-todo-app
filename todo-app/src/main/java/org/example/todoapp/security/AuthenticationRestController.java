@@ -51,6 +51,7 @@ public class AuthenticationRestController {
             @RequestBody CustomUserLoginDTO customUserLoginDTO,
             HttpServletResponse response
     ) {
+        logger.info("DEBUG: /api/auth/login called");
         logger.debug("Attempting authentication for user: {}", customUserLoginDTO.username());
 
         // Step 1: Perform authentication

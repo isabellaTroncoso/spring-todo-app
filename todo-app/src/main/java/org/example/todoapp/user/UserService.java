@@ -1,4 +1,4 @@
-package org.example.todoapp.user.controller;
+package org.example.todoapp.user;
 
 import org.example.todoapp.user.custom.CustomUser;
 import org.example.todoapp.user.custom.CustomUserRepository;

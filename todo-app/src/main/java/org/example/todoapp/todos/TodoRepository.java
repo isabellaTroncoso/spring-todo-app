@@ -9,5 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface TodoRepository extends JpaRepository<Todo, UUID> {
-    List<Todo> findAllByUser(CustomUser user);
+    List<Todo> findByUser(CustomUser user);
 }
