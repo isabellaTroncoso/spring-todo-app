@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Todo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+
+<div class="flex justify-end mb-4">
+    <form th:action="@{/logout}" method="post">
+        <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+            Logout
+        </button>
+    </form>
+</div>
+
+<div class="max-w-lg mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-bold mb-4">Edit Todo</h1>
+
+    <form th:action="@{'/user/todos/update/' + ${todo.id}}" th:object="${todo}" method="post" class="space-y-4">
+        <div>
+            <label class="block mb-1 font-semibold">Title</label>
+            <input type="text" th:field="*{title}" class="w-full border p-2 rounded" required>
+        </div>
+
+        <div>
+            <label class="block mb-1 font-semibold">Description</label>
+            <textarea th:field="*{description}" class="w-full border p-2 rounded"></textarea>
+        </div>
+
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Update Todo
+        </button>
+    </form>
+</div>
+
+</body>
+</html>

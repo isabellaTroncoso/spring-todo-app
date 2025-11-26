@@ -1,4 +1,5 @@
 package org.example.todoapp.todos;
+import org.example.todoapp.user.authority.UserRole;
 import org.example.todoapp.user.custom.CustomUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,33 +18,65 @@ public class TodoService {
         this.todoRepository = todoRepository;
     }
 
-    // Hämta alla todos för en user
     public List<Todo> getTodosForUser(CustomUser user) {
         return todoRepository.findByUser(user);
     }
 
-    // Hämta alla todos (Admin)
-    public List<Todo> getAllTodos() {
-        return todoRepository.findAll();
-    }
-
-    // Hämta todo by id
     public Optional<Todo> getTodoById(UUID id) {
         return todoRepository.findById(id);
     }
 
-    // Skapa todo
+    public List<Todo> getAllTodos() {
+        return todoRepository.findAll();
+    }
+
     public Todo createTodo(Todo todo) {
         return todoRepository.save(todo);
     }
 
-    // Uppdatera todo
-    public Todo updateTodo(Todo todo) {
-        return todoRepository.save(todo);
+
+    public void toggleTodoCompleted(UUID id, CustomUser user) {
+
+        Todo todo = todoRepository.findById(id).orElse(null);
+        if (todo == null) return;
+
+        if (!todo.getUser().getId().equals(user.getId()) &&
+                !user.getRoles().contains(UserRole.ADMIN)) {
+            return;
+        }
+
+        todo.setCompleted(!todo.isCompleted());
+        todoRepository.save(todo);
     }
 
-    // Radera todo
-    public void deleteTodo(UUID id) {
+
+    public void deleteTodoIfAllowed(UUID id, CustomUser user) {
+
+        Todo todo = todoRepository.findById(id).orElse(null);
+        if (todo == null) return;
+
+        if (!todo.getUser().getId().equals(user.getId()) &&
+                !user.getRoles().contains(UserRole.ADMIN)) {
+            return;
+        }
+
         todoRepository.deleteById(id);
+    }
+
+
+    public Todo updateTodoIfAllowed(UUID id, Todo form, CustomUser user) {
+        Todo todo = todoRepository.findById(id).orElse(null);
+        if (todo == null) return null;
+
+        if (!todo.getUser().getId().equals(user.getId()) &&
+                !user.getRoles().contains(UserRole.ADMIN)) {
+            return null;
+        }
+
+        todo.setTitle(form.getTitle());
+        todo.setDescription(form.getDescription());
+        todo.setCompleted(form.isCompleted());
+
+        return todoRepository.save(todo);
     }
 }

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+
+<h1 class="text-2xl font-bold mb-6">Admin Dashboard</h1>
+
+<table class="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+  <thead class="bg-gray-200">
+  <tr>
+    <th class="px-4 py-2 border">Username</th>
+    <th class="px-4 py-2 border">Roles</th>
+    <th class="px-4 py-2 border">Actions</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="user : ${users}">
+    <td class="px-4 py-2 border" th:text="${user.username}"></td>
+    <td class="px-4 py-2 border" th:text="${user.roles}"></td>
+    <td class="px-4 py-2 border text-center">
+      <!-- Make Admin button -->
+      <form th:action="@{'/admin/make-admin/' + ${user.id}}" method="post" th:if="${!user.roles.contains('ADMIN')}">
+        <button type="submit"
+                class="text-green-600 hover:underline bg-transparent border-0 p-0">
+          Make Admin
+        </button>
+      </form>
+
+      <!-- Delete User button -->
+      <form th:action="@{'/admin/delete-user/' + ${user.id}}" method="post" th:if="${user.id != currentAdmin.id}" class="inline ml-2">
+        <button type="submit"
+                class="text-red-600 hover:underline bg-transparent border-0 p-0"
+                onclick="return confirm('Delete this user?')">
+          Delete
+        </button>
+      </form>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+<!-- Log out -->
+<div class="mt-6">
+  <form th:action="@{/logout}" method="post">
+    <button type="submit"
+            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+      Logout
+    </button>
+  </form>
+</div>
+
+</body>
+</html>
+

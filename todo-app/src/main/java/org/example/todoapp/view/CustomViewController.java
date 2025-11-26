@@ -10,8 +10,6 @@ import org.example.todoapp.user.custom.CustomUserRepository;
 import org.example.todoapp.user.dto.CustomUserCreationDTO;
 import org.example.todoapp.user.mapper.CustomUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -41,6 +39,11 @@ public class CustomViewController {
         this.passwordEncoder = passwordEncoder;
         this.customUserMapper = customUserMapper;
         this.todoService = todoService;
+    }
+
+    @GetMapping("/")
+    public String root() {
+        return "login";
     }
 
     @GetMapping("/login")
@@ -117,7 +120,7 @@ public class CustomViewController {
         return "user";
     }
 
-    // Skapa ny todo
+    // ================= CREATE TODO =================
     @PostMapping("/user/todos")
     public String createTodo(@AuthenticationPrincipal CustomUserDetails userDetails,
                              @ModelAttribute("newTodo") Todo todo) {
@@ -127,45 +130,89 @@ public class CustomViewController {
         return "redirect:/user";
     }
 
-    // Uppdatera todo
-    @PostMapping("/user/todos/edit/{id}")
-    public String updateTodo(@AuthenticationPrincipal CustomUserDetails userDetails,
-                             @PathVariable UUID id,
-                             @ModelAttribute Todo todoForm) {
+    // ================= EDIT & UPDATE TODO =================
+    @GetMapping("/user/todos/edit/{id}")
+    public String editTodoPage(@PathVariable UUID id,
+                               @AuthenticationPrincipal CustomUserDetails userDetails,
+                               Model model) {
+        Optional<Todo> optionalTodo = todoService.getTodoById(id);
+        if (optionalTodo.isEmpty()) return "redirect:/user";
+
+        Todo todo = optionalTodo.get();
         CustomUser user = userDetails.getCustomUser();
-        Todo todo = todoService.getTodoById(id).orElse(null);
-        if (todo != null && (todo.getUser().getId().equals(user.getId()) || user.getRoles().contains(UserRole.ADMIN))) {
-            todo.setTitle(todoForm.getTitle());
-            todo.setDescription(todoForm.getDescription());
-            todo.setCompleted(todoForm.isCompleted());
-            todoService.updateTodo(todo);
+
+        if (!todo.getUser().getId().equals(user.getId()) && !user.getRoles().contains(UserRole.ADMIN)) {
+            return "redirect:/user";
         }
+
+        model.addAttribute("todo", todo);
+        return "todo-edit"; // skapar ett Thymeleaf formulär
+    }
+
+    @PostMapping("/user/todos/update/{id}")
+    public String updateTodo(@PathVariable UUID id,
+                             @AuthenticationPrincipal CustomUserDetails userDetails,
+                             @ModelAttribute Todo form) {
+        todoService.updateTodoIfAllowed(id, form, userDetails.getCustomUser());
         return "redirect:/user";
     }
 
-    // Radera todo
+    // ================= DELETE TODO =================
     @PostMapping("/user/todos/delete/{id}")
-    public String deleteTodo(@AuthenticationPrincipal CustomUserDetails userDetails,
-                             @PathVariable UUID id) {
-        CustomUser user = userDetails.getCustomUser();
-        Todo todo = todoService.getTodoById(id).orElse(null);
-        if (todo != null && (todo.getUser().getId().equals(user.getId()) || user.getRoles().contains(UserRole.ADMIN))) {
-            todoService.deleteTodo(id);
-        }
+    public String deleteTodo(@PathVariable UUID id,
+                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+        todoService.deleteTodoIfAllowed(id, userDetails.getCustomUser());
         return "redirect:/user";
     }
 
-    @PostMapping("/user/{id}/make-admin")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> makeAdmin(@PathVariable UUID id) {
-        Optional<CustomUser> optionalUser = customUserRepository.findById(id);
-        if (optionalUser.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        CustomUser user = optionalUser.get();
-        user.getRoles().add(UserRole.ADMIN);
-        customUserRepository.save(user);
-        return ResponseEntity.ok("User is now admin");
+    // ================= TOGGLE COMPLETE =================
+    @PostMapping("/user/todos/toggle/{id}")
+    public String toggleTodo(@PathVariable UUID id,
+                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+        todoService.toggleTodoCompleted(id, userDetails.getCustomUser());
+        return "redirect:/user";
     }
 
+    // Todo - Fix admin roles and authorities
+    // ================== ADMIN DASHBOARD ==================
+    @GetMapping("/admin")
+    public String adminDashboard(@AuthenticationPrincipal CustomUserDetails adminDetails, Model model) {
+        // Hämta alla användare
+        List<CustomUser> users = customUserRepository.findAll();
+        System.out.println("Authorities: " + adminDetails.getAuthorities());
+
+        // Lägg till inloggad admin för att kunna undvika att radera sig själv
+        model.addAttribute("currentAdmin", adminDetails.getCustomUser());
+        model.addAttribute("users", users);
+
+        return "admin";
+    }
+
+    // Ge user ADMIN-roll
+    @PostMapping("/admin/make-admin/{id}")
+    public String makeAdmin(@PathVariable UUID id,
+                            @AuthenticationPrincipal CustomUserDetails adminDetails) {
+        Optional<CustomUser> optionalUser = customUserRepository.findById(id);
+        optionalUser.ifPresent(user -> {
+            // Säkerhetscheck: låt admin inte göra sig själv till admin igen (ej nödvändigt men säkerhet)
+            if (!user.getId().equals(adminDetails.getCustomUser().getId())) {
+                user.getRoles().add(UserRole.ADMIN);
+                customUserRepository.save(user);
+            }
+        });
+        return "redirect:/admin";
+    }
+
+    // Radera user (ej sig själv)
+    @PostMapping("/admin/delete-user/{id}")
+    public String deleteUser(@PathVariable UUID id,
+                             @AuthenticationPrincipal CustomUserDetails adminDetails) {
+        Optional<CustomUser> optionalUser = customUserRepository.findById(id);
+        optionalUser.ifPresent(user -> {
+            if (!user.getId().equals(adminDetails.getCustomUser().getId())) {
+                customUserRepository.delete(user);
+            }
+        });
+        return "redirect:/admin";
+    }
 }

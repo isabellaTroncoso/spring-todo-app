@@ -38,7 +38,7 @@ public class AppSecurityConfig {
     @Autowired
     public AppSecurityConfig(
             UserDetailsService userDetailsService,
-            @Value("{remember.me.key}") String rememberMeKey,
+            @Value("${remember.me.key:default-secret-key}") String rememberMeKey,
             JwtAuthenticationFilter jwtAuthenticationFilter // Constructor Param (property-driven) App.properties
     ) {
         this.userDetailsService = userDetailsService;
@@ -82,7 +82,7 @@ public class AppSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/login", "/register", "/static/**").permitAll()
                         .requestMatchers("/admin", "/tools").hasRole("ADMIN")
-                        .requestMatchers("/user").hasRole("USER")
+                        .requestMatchers("/user/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
 

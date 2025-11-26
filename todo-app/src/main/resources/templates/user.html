@@ -5,26 +5,77 @@
     <title>User Todos</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
+<div class="flex justify-end mb-4">
+    <form th:action="@{/logout}" method="post">
+        <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+            Logout
+        </button>
+    </form>
+</div>
+
 <body class="bg-gray-100 min-h-screen p-8">
 
-<h1 class="text-2xl font-bold mb-4">Todos for <span th:text="${username}"></span></h1>
+<h1 class="text-2xl font-bold mb-6">
+    Todos for <span th:text="${username}"></span>
+</h1>
 
 <table class="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-    <thead>
+    <thead class="bg-gray-200">
     <tr>
+        <th class="px-4 py-2 border">Done</th>
         <th class="px-4 py-2 border">Title</th>
         <th class="px-4 py-2 border">Description</th>
-        <th class="px-4 py-2 border">Completed</th>
+        <th class="px-4 py-2 border">Actions</th>
     </tr>
     </thead>
+
     <tbody>
     <tr th:each="todo : ${todos}">
+        <!-- Toggle completed -->
+        <td class="px-4 py-2 border text-center">
+            <form th:action="@{'/user/todos/toggle/' + ${todo.id}}" method="post">
+                <input type="checkbox" th:checked="${todo.completed}" onclick="this.form.submit()">
+            </form>
+        </td>
+
+        <!-- Todo info -->
         <td class="px-4 py-2 border" th:text="${todo.title}"></td>
         <td class="px-4 py-2 border" th:text="${todo.description}"></td>
-        <td class="px-4 py-2 border" th:text="${todo.completed}"></td>
+
+        <!-- Actions: edit & delete -->
+        <td class="px-4 py-2 border text-center">
+            <a th:href="@{'/user/todos/edit/' + ${todo.id}}" class="text-blue-600 hover:underline">Edit</a>
+            |
+            <form th:action="@{'/user/todos/delete/' + ${todo.id}}" method="post" class="inline">
+                <button type="submit"
+                        class="text-red-600 hover:underline bg-transparent border-0 p-0"
+                        onclick="return confirm('Delete this todo?')">
+                    Delete
+                </button>
+            </form>
+        </td>
     </tr>
     </tbody>
 </table>
+
+<!-- Create new todo -->
+<div class="mt-8 bg-white p-6 shadow-md rounded-lg w-1/2">
+    <h2 class="text-xl font-bold mb-4">Create a new Todo</h2>
+
+    <form th:action="@{/user/todos}" method="post" class="space-y-4">
+        <input type="text" name="title" placeholder="Title" required
+               class="w-full border p-2 rounded">
+
+        <textarea name="description" placeholder="Description"
+                  class="w-full border p-2 rounded"></textarea>
+
+        <button type="submit"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Create Todo
+        </button>
+    </form>
+</div>
 
 </body>
 </html>
