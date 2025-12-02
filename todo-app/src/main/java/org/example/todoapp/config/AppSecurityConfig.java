@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import java.util.concurrent.TimeUnit;
 
@@ -73,8 +74,10 @@ public class AppSecurityConfig {
         http
                 .securityMatcher("/**")  // Alla andra requests (webb)
 
-                .csrf(csrf -> csrf.disable()) // För enkelhet. Du KAN aktivera den om du vill.
-
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .ignoringRequestMatchers("/api/**")
+                )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
@@ -91,7 +94,15 @@ public class AppSecurityConfig {
                         .loginProcessingUrl("/authenticate")
                         .usernameParameter("username")
                         .passwordParameter("password")
-                        .defaultSuccessUrl("/user", true)
+                        .successHandler((request, response, authentication) -> {
+                            var authorities = authentication.getAuthorities();
+
+                            if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                                response.sendRedirect("/admin");
+                            } else {
+                                response.sendRedirect("/user");
+                            }
+                        })
                         .failureUrl("/login?error")
                 )
 

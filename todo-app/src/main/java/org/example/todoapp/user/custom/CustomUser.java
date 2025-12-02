@@ -109,4 +109,10 @@ public class CustomUser {
     public void setRoles(Set<UserRole> roles) {
         this.roles = roles;
     }
+
+    public boolean isAdmin() {
+        return roles != null && roles.stream()
+                .anyMatch(role -> role == UserRole.ADMIN);
+    }
+
 }

@@ -2,7 +2,9 @@ package org.example.todoapp.security;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import org.example.todoapp.config.RabbitConfig;
 import org.example.todoapp.security.jwt.JwtUtils;
+import org.example.todoapp.user.authority.UserRole;
 import org.example.todoapp.user.custom.CustomUser;
 import org.example.todoapp.user.custom.CustomUserDetails;
 import org.example.todoapp.user.dto.CustomUserCreationDTO;
@@ -10,11 +12,13 @@ import org.example.todoapp.user.dto.CustomUserLoginDTO;
 import org.example.todoapp.user.custom.CustomUserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,15 +38,18 @@ public class AuthenticationRestController {
     private final AuthenticationManager authenticationManager;
     private final CustomUserRepository customUserRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AmqpTemplate amqpTemplate;
 
 
     @Autowired
     public AuthenticationRestController(JwtUtils jwtUtils, AuthenticationManager authenticationManager,
-                                        CustomUserRepository customUserRepository, PasswordEncoder passwordEncoder) {
+                                        CustomUserRepository customUserRepository, PasswordEncoder passwordEncoder,
+                                        AmqpTemplate amqpTemplate) {
         this.jwtUtils = jwtUtils;
         this.authenticationManager = authenticationManager;
         this.customUserRepository = customUserRepository;
         this.passwordEncoder = passwordEncoder;
+        this.amqpTemplate = amqpTemplate;
     }
 
 
@@ -103,6 +110,13 @@ public class AuthenticationRestController {
 
         logger.info("Authentication successful for user: {}", customUserLoginDTO.username());
 
+        // RabbitMQ
+        amqpTemplate.convertAndSend(
+                RabbitConfig.EXCHANGE_NAME,
+                RabbitConfig.ROUTING_KEY,
+                "User Logged in, todo: send email to user to alert them of login from weird IP addresses"
+        );
+
         // Step 5: Return token - Optional
         return ResponseEntity.ok(Map.of(
                 "username", customUserLoginDTO.username(),
@@ -128,7 +142,7 @@ public class AuthenticationRestController {
                 dto.username(),
                 passwordEncoder.encode(dto.password()),
                 true, true, true, true,
-                Set.of() // standard role USER
+                Set.of(UserRole.USER) // standard role USER
         );
 
         customUserRepository.save(user);
@@ -139,6 +153,20 @@ public class AuthenticationRestController {
                 "username", user.getUsername()
         ));
     }
+
+    @GetMapping("/user")
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Not authenticated"));
+        }
+        CustomUser user = userDetails.getCustomUser();
+        return ResponseEntity.ok(Map.of(
+                "id", user.getId(),
+                "username", user.getUsername(),
+                "roles", user.getRoles().stream().map(Enum::name).toList()
+        ));
+    }
+
 
     // ================= LOGOUT =================
     @PostMapping("/logout")

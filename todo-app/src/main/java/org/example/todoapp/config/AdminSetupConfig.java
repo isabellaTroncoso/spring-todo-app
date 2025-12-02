@@ -22,7 +22,7 @@ public class AdminSetupConfig {
                         "admin",
                         encoder.encode("admin123"), // lösenord
                         true, true, true, true,
-                        Set.of(UserRole.ADMIN)
+                        Set.of(UserRole.ADMIN, UserRole.USER)
                 );
                 repo.save(admin);
                 System.out.println("Admin user created!");

@@ -25,7 +25,6 @@ import java.util.UUID;
 @Controller
 public class CustomViewController {
 
-    // TODO - Replace with Service in the future
     private final CustomUserRepository customUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final CustomUserMapper customUserMapper;
@@ -34,7 +33,8 @@ public class CustomViewController {
     @Autowired
     public CustomViewController(CustomUserRepository customUserRepository,
                                 PasswordEncoder passwordEncoder,
-                                CustomUserMapper customUserMapper, TodoService todoService) {
+                                CustomUserMapper customUserMapper,
+                                TodoService todoService) {
         this.customUserRepository = customUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.customUserMapper = customUserMapper;
@@ -48,13 +48,11 @@ public class CustomViewController {
 
     @GetMapping("/login")
     public String loginPage() {
-
         return "login";
     }
 
     @GetMapping("/logout")
     public String logoutPage() {
-
         return "logout";
     }
 
@@ -69,26 +67,18 @@ public class CustomViewController {
     public String registerUser(
             @Valid @ModelAttribute("customUser") CustomUserCreationDTO customUserCreationDTO,
             BindingResult bindingResult
-
-    )
-    {
-        System.out.println(customUserCreationDTO);
-        System.out.println("step one");
+    ) {
         if (bindingResult.hasErrors()) {
-            System.out.println("Binding results");
             return "registerpage";
         }
 
         if (customUserRepository.existsByUsername(customUserCreationDTO.username())) {
             bindingResult.rejectValue("username", "error.username", "Username already exists");
-            System.out.println("Reject value");
             return "registerpage";
         }
 
-        // Hash DTO-lösenordet först
         String hashedPassword = passwordEncoder.encode(customUserCreationDTO.password());
 
-        // Skapa entity med hashat lösenord
         CustomUser customUser = new CustomUser(
                 customUserCreationDTO.username(),
                 hashedPassword,
@@ -99,28 +89,35 @@ public class CustomViewController {
                 Set.of(UserRole.USER)
         );
 
-        // Spara användare
         customUserRepository.save(customUser);
-        System.out.println("DTO username = '" + customUserCreationDTO.username() + "'");
-        System.out.println("DTO password = '" + customUserCreationDTO.password() + "'");
 
         return "redirect:/login";
     }
 
+    // ================= USER TODOS =================
     @GetMapping("/user")
     public String userTodosPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        if (userDetails == null) {
-            return "redirect:/login";
-        }
-        CustomUser user = userDetails.getCustomUser(); // extrahera entity
+        if (userDetails == null) return "redirect:/login";
+
+        CustomUser user = userDetails.getCustomUser();
+
+        // ================= USER TODOS =================
         List<Todo> todos = todoService.getTodosForUser(user);
         model.addAttribute("todos", todos);
         model.addAttribute("username", user.getUsername());
         model.addAttribute("newTodo", new Todo());
+
+        // ================= ADMIN PANEL =================
+        if (user.isAdmin()) {
+            List<CustomUser> users = customUserRepository.findAll();
+            model.addAttribute("users", users);
+            model.addAttribute("currentAdmin", user);
+        }
+
         return "user";
     }
 
-    // ================= CREATE TODO =================
+
     @PostMapping("/user/todos")
     public String createTodo(@AuthenticationPrincipal CustomUserDetails userDetails,
                              @ModelAttribute("newTodo") Todo todo) {
@@ -130,23 +127,16 @@ public class CustomViewController {
         return "redirect:/user";
     }
 
-    // ================= EDIT & UPDATE TODO =================
     @GetMapping("/user/todos/edit/{id}")
     public String editTodoPage(@PathVariable UUID id,
                                @AuthenticationPrincipal CustomUserDetails userDetails,
                                Model model) {
-        Optional<Todo> optionalTodo = todoService.getTodoById(id);
+        CustomUser user = userDetails.getCustomUser();
+        Optional<Todo> optionalTodo = getTodoIfAllowed(id, user);
         if (optionalTodo.isEmpty()) return "redirect:/user";
 
-        Todo todo = optionalTodo.get();
-        CustomUser user = userDetails.getCustomUser();
-
-        if (!todo.getUser().getId().equals(user.getId()) && !user.getRoles().contains(UserRole.ADMIN)) {
-            return "redirect:/user";
-        }
-
-        model.addAttribute("todo", todo);
-        return "todo-edit"; // skapar ett Thymeleaf formulär
+        model.addAttribute("todo", optionalTodo.get());
+        return "todo-edit";
     }
 
     @PostMapping("/user/todos/update/{id}")
@@ -157,53 +147,44 @@ public class CustomViewController {
         return "redirect:/user";
     }
 
-    // ================= DELETE TODO =================
     @PostMapping("/user/todos/delete/{id}")
     public String deleteTodo(@PathVariable UUID id,
                              @AuthenticationPrincipal CustomUserDetails userDetails) {
-        todoService.deleteTodoIfAllowed(id, userDetails.getCustomUser());
+        CustomUser user = userDetails.getCustomUser();
+        Optional<Todo> optionalTodo = getTodoIfAllowed(id, user);
+        optionalTodo.ifPresent(todo -> todoService.deleteTodoIfAllowed(id, user));
         return "redirect:/user";
     }
 
-    // ================= TOGGLE COMPLETE =================
     @PostMapping("/user/todos/toggle/{id}")
     public String toggleTodo(@PathVariable UUID id,
                              @AuthenticationPrincipal CustomUserDetails userDetails) {
-        todoService.toggleTodoCompleted(id, userDetails.getCustomUser());
+        CustomUser user = userDetails.getCustomUser();
+        Optional<Todo> optionalTodo = getTodoIfAllowed(id, user);
+        optionalTodo.ifPresent(todo -> todoService.toggleTodoCompleted(id, user));
         return "redirect:/user";
     }
 
-    // Todo - Fix admin roles and authorities
-    // ================== ADMIN DASHBOARD ==================
+    // ================= ADMIN DASHBOARD =================
     @GetMapping("/admin")
-    public String adminDashboard(@AuthenticationPrincipal CustomUserDetails adminDetails, Model model) {
-        // Hämta alla användare
-        List<CustomUser> users = customUserRepository.findAll();
-        System.out.println("Authorities: " + adminDetails.getAuthorities());
+    public String adminRedirect(@AuthenticationPrincipal CustomUserDetails adminDetails) {
 
-        // Lägg till inloggad admin för att kunna undvika att radera sig själv
-        model.addAttribute("currentAdmin", adminDetails.getCustomUser());
-        model.addAttribute("users", users);
-
-        return "admin";
+        return "redirect:/user";
     }
 
-    // Ge user ADMIN-roll
     @PostMapping("/admin/make-admin/{id}")
     public String makeAdmin(@PathVariable UUID id,
                             @AuthenticationPrincipal CustomUserDetails adminDetails) {
         Optional<CustomUser> optionalUser = customUserRepository.findById(id);
         optionalUser.ifPresent(user -> {
-            // Säkerhetscheck: låt admin inte göra sig själv till admin igen (ej nödvändigt men säkerhet)
             if (!user.getId().equals(adminDetails.getCustomUser().getId())) {
                 user.getRoles().add(UserRole.ADMIN);
                 customUserRepository.save(user);
             }
         });
-        return "redirect:/admin";
+        return "redirect:/user";
     }
 
-    // Radera user (ej sig själv)
     @PostMapping("/admin/delete-user/{id}")
     public String deleteUser(@PathVariable UUID id,
                              @AuthenticationPrincipal CustomUserDetails adminDetails) {
@@ -213,6 +194,18 @@ public class CustomViewController {
                 customUserRepository.delete(user);
             }
         });
-        return "redirect:/admin";
+        return "redirect:/user";
+    }
+
+    // ================= PRIVATE HELPERS =================
+    private Optional<Todo> getTodoIfAllowed(UUID id, CustomUser user) {
+        Optional<Todo> optionalTodo = todoService.getTodoById(id);
+        if (optionalTodo.isEmpty()) return Optional.empty();
+
+        Todo todo = optionalTodo.get();
+        if (!todo.getUser().getId().equals(user.getId()) && !user.isAdmin()) {
+            return Optional.empty();
+        }
+        return Optional.of(todo);
     }
 }

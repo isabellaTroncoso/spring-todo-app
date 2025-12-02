@@ -11,6 +11,7 @@
 <!-- Must match appSecurityConfig, loginProcessingUrl -->
 <form th:action="@{/authenticate}" method="post"
       class="bg-white p-8 rounded-2xl shadow-md w-full max-w-md space-y-5">
+  <input type="hidden" name="_csrf" value="${_csrf.token}">
 
   <h2 class="text-2xl font-bold text-center text-gray-800">Sign in</h2>
 

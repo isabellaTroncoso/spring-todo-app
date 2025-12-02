@@ -35,18 +35,17 @@ public class TodoService {
     }
 
 
-    public void toggleTodoCompleted(UUID id, CustomUser user) {
-
+    public Todo toggleTodoCompleted(UUID id, CustomUser user) {
         Todo todo = todoRepository.findById(id).orElse(null);
-        if (todo == null) return;
+        if (todo == null) return null;
 
         if (!todo.getUser().getId().equals(user.getId()) &&
-                !user.getRoles().contains(UserRole.ADMIN)) {
-            return;
+                !user.isAdmin()) {
+            return null;
         }
 
         todo.setCompleted(!todo.isCompleted());
-        todoRepository.save(todo);
+        return todoRepository.save(todo);
     }
 
 
@@ -79,4 +78,8 @@ public class TodoService {
 
         return todoRepository.save(todo);
     }
+    public Todo save(Todo todo) {
+        return todoRepository.save(todo);
+    }
+
 }

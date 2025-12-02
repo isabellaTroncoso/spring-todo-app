@@ -27,7 +27,7 @@ public class CustomUserMapper {
                 true , true, true, true, Set.of(UserRole.USER)
         );
     }
- // Todo : replace hardcoded values -> row 27 : customUserCreationDTO and thymeleaf register input field
+
     public CustomUserResponseDTO toUsernameDTO(CustomUser customUser) {
 
         return new CustomUserResponseDTO(customUser.getUsername());
