@@ -2,6 +2,8 @@ package org.example.todoapp.security;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+//import org.example.todoapp.config.RabbitConfig;
+import jakarta.validation.Valid;
 import org.example.todoapp.config.RabbitConfig;
 import org.example.todoapp.security.jwt.JwtUtils;
 import org.example.todoapp.user.authority.UserRole;
@@ -13,6 +15,7 @@ import org.example.todoapp.user.custom.CustomUserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,23 +42,25 @@ public class AuthenticationRestController {
     private final CustomUserRepository customUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final AmqpTemplate amqpTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
 
     @Autowired
     public AuthenticationRestController(JwtUtils jwtUtils, AuthenticationManager authenticationManager,
                                         CustomUserRepository customUserRepository, PasswordEncoder passwordEncoder,
-                                        AmqpTemplate amqpTemplate) {
+                                        AmqpTemplate amqpTemplate, RabbitTemplate rabbitTemplate) {
         this.jwtUtils = jwtUtils;
         this.authenticationManager = authenticationManager;
         this.customUserRepository = customUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.amqpTemplate = amqpTemplate;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(
-            @RequestBody CustomUserLoginDTO customUserLoginDTO,
+    public ResponseEntity<?> authenticateUser(@Valid
+                                                  @RequestBody CustomUserLoginDTO customUserLoginDTO,
             HttpServletResponse response
     ) {
         logger.info("DEBUG: /api/auth/login called");
@@ -129,7 +134,7 @@ public class AuthenticationRestController {
 
     // ================= REGISTER =================
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody CustomUserCreationDTO dto) {
+    public ResponseEntity<?> register(@Valid @RequestBody CustomUserCreationDTO dto) {
 
         if (customUserRepository.existsByUsername(dto.username())) {
             return ResponseEntity.status(409).body(Map.of(

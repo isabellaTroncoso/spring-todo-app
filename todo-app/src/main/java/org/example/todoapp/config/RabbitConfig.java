@@ -33,6 +33,7 @@ public class RabbitConfig {
                 .with(ROUTING_KEY);
     }
 
-
 }
+
+
 

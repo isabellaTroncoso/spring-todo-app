@@ -1,5 +1,7 @@
 package org.example.todoapp.todos;
 import jakarta.validation.Valid;
+//import org.example.todoapp.producer.EmailProducer;
+import org.example.todoapp.producer.EmailProducer;
 import org.example.todoapp.todos.dto.TodoCreateDTO;
 import org.example.todoapp.todos.dto.TodoResponseDTO;
 import org.example.todoapp.todos.dto.TodoUpdateDTO;
@@ -23,14 +25,16 @@ public class TodoController {
     private final TodoService todoService;
     private final CustomUserRepository userRepository;
     private final TodoMapper todoMapper;
+    private final EmailProducer emailProducer;
 
     @Autowired
     public TodoController(TodoService todoService,
                           CustomUserRepository userRepository,
-                          TodoMapper todoMapper) {
+                          TodoMapper todoMapper, EmailProducer emailProducer) {
         this.todoService = todoService;
         this.userRepository = userRepository;
         this.todoMapper = todoMapper;
+        this.emailProducer = emailProducer;
     }
 
     // ==================== GET USER TODOS ====================
@@ -56,6 +60,10 @@ public class TodoController {
         CustomUser user = userDetails.getCustomUser();
         Todo todo = todoMapper.toEntity(dto, user);
         Todo saved = todoService.createTodo(todo);
+
+        // Skicka meddelande till RabbitMQ
+        String message = String.format("User %s created a new todo: %s", user.getUsername(), todo.getTitle());
+        emailProducer.sendEmailMessage(message);
 
         return ResponseEntity.ok(todoMapper.toDTO(saved));
     }
@@ -148,12 +156,27 @@ public class TodoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TodoResponseDTO> getTodoById(@PathVariable UUID id) {
-        Optional<Todo> todo = todoService.getTodoById(id);
-        if (todo.isEmpty()) {
+    public ResponseEntity<?> getTodoById(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        CustomUser currentUser = userDetails.getCustomUser();
+
+        Optional<Todo> optionalTodo = todoService.getTodoById(id);
+        if (optionalTodo.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(todoMapper.toDTO(todo.get()));
+
+        Todo todo = optionalTodo.get();
+
+        boolean isOwner = todo.getUser().getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser.isAdmin();
+
+        if (!isOwner && !isAdmin) {
+            return ResponseEntity.status(403).body(Map.of("error", "Forbidden"));
+        }
+
+        return ResponseEntity.ok(todoMapper.toDTO(todo));
     }
 
 
