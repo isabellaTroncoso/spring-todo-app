@@ -1,5 +1,6 @@
 package org.example.todoapp.todos;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import org.example.todoapp.user.custom.CustomUser;
 
@@ -23,6 +24,7 @@ public class Todo {
     // Many todos can belong to one user
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonBackReference
     private CustomUser user;
 
     public Todo() {}

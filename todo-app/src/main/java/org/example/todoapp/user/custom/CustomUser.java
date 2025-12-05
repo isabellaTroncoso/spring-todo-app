@@ -1,8 +1,11 @@
 package org.example.todoapp.user.custom;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import org.example.todoapp.todos.Todo;
 import org.example.todoapp.user.authority.UserRole;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -33,6 +36,10 @@ public class CustomUser {
     @ElementCollection(targetClass = UserRole.class, fetch = FetchType.EAGER) // Fetch Immediately
     @Enumerated(value = EnumType.STRING)
     private Set<UserRole> roles;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Todo> todos;
 
     // Constructors
     public CustomUser() {}
@@ -113,6 +120,14 @@ public class CustomUser {
     public boolean isAdmin() {
         return roles != null && roles.stream()
                 .anyMatch(role -> role == UserRole.ADMIN);
+    }
+
+    public List<Todo> getTodos() {
+        return todos;
+    }
+
+    public void setTodos(List<Todo> todos) {
+        this.todos = todos;
     }
 
 }

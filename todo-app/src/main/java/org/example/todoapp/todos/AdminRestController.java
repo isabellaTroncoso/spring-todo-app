@@ -4,6 +4,7 @@ import org.example.todoapp.user.custom.CustomUser;
 import org.example.todoapp.user.custom.CustomUserRepository;
 import org.example.todoapp.user.authority.UserRole;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -44,17 +45,36 @@ public class AdminRestController {
     }
 
     // ================= DELETE USER =================
+    // ================= DELETE USER =================
     @DeleteMapping("/delete-user/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
-        if (!userRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> deleteUser(@PathVariable UUID id, Authentication auth) {
+        CustomUser target = userRepository.findById(id).orElse(null);
+        if (target == null) {
+            return ResponseEntity.status(404).body(Map.of(
+                    "success", false,
+                    "message", "User not found"
+            ));
         }
 
+        // Hämta inloggad admin
+        String loggedInUsername = auth.getName();
+        CustomUser loggedInUser = userRepository.findUserByUsername(loggedInUsername)
+                .orElseThrow(() -> new RuntimeException("Logged-in admin not found"));
+
+        // Admin kan inte radera sig själv
+        if (loggedInUser.getId().equals(id)) {
+            return ResponseEntity.status(400).body(Map.of(
+                    "success", false,
+                    "message", "Admins cannot delete themselves"
+            ));
+        }
+
+        // Ta bort användaren
         userRepository.deleteById(id);
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "User deleted"
+                "message", "User deleted successfully"
         ));
     }
 }
