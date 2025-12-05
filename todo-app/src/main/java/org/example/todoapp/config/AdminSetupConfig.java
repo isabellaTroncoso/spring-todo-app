@@ -11,6 +11,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Set;
 
+/**
+ * Denna konfiguration skapar en standardadministratör ENDAST för test- och examinationssyfte.
+ * Syftet är att läraren/examinatorn ska kunna logga in och verifiera behörigheter och roller.
+ * I en riktig produktionsmiljö skulle denna användare inte skapas här.
+ */
+
+
+
 @Configuration
 public class AdminSetupConfig {
 
