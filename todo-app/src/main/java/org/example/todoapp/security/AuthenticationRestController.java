@@ -85,7 +85,7 @@ public class AuthenticationRestController {
             System.out.println("  Authorities: " + userDetails.getAuthorities());
             System.out.println("  Account Non Locked: " + userDetails.isAccountNonLocked());
             System.out.println("  Account Enabled: " + userDetails.isEnabled());
-            System.out.println("  Password (hashed): " + userDetails.getPassword());
+            //System.out.println("  Password (hashed): " + userDetails.getPassword());
         } else {
             System.out.println("Principal value: " + principal);
         }

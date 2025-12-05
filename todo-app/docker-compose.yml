@@ -1,0 +1,45 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todo-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - rabbit
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
+      # Postgres
+      POSTGRES_CONNECTION_STRING: jdbc:postgresql://db:5432/postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: 12345
+
+      # RabbitMQ
+      SPRING_RABBITMQ_HOST: rabbit
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+
+  db:
+    image: postgres:16
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+    ports:
+      - "5050:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  rabbit:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+volumes:
+  postgres_data:
