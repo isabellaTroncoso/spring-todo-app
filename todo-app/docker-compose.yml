@@ -1,4 +1,7 @@
+version: "3.9"
+
 services:
+
   app:
     build:
       context: .
@@ -12,12 +15,12 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
 
-      # Postgres
-      POSTGRES_CONNECTION_STRING: jdbc:postgresql://db:5432/postgres
-      POSTGRES_USERNAME: postgres
-      POSTGRES_PASSWORD: 12345
+      # ===== DATASOURCE =====
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 12345
 
-      # RabbitMQ
+      # ===== RABBITMQ =====
       SPRING_RABBITMQ_HOST: rabbit
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: guest
@@ -26,9 +29,11 @@ services:
   db:
     image: postgres:16
     container_name: postgres-db
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: postgres
     ports:
       - "5050:5432"
     volumes:
@@ -37,6 +42,7 @@ services:
   rabbit:
     image: rabbitmq:3-management
     container_name: rabbitmq
+    restart: always
     ports:
       - "5672:5672"
       - "15672:15672"
