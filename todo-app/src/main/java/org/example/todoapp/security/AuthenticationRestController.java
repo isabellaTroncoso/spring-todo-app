@@ -108,7 +108,7 @@ public class AuthenticationRestController {
         // Step 4: Set cookie
         Cookie cookie = new Cookie("authToken", token);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // ✅ change to true in production (HTTPS only)
+        cookie.setSecure(true); // ✅ change to true in production (HTTPS only)
         cookie.setPath("/");
         cookie.setMaxAge(3600); // 1 hour
         response.addCookie(cookie);
@@ -178,7 +178,7 @@ public class AuthenticationRestController {
     public ResponseEntity<?> logout(HttpServletResponse response) {
         Cookie cookie = new Cookie("authToken", null);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // true i produktion
+        cookie.setSecure(true); // true i produktion
         cookie.setPath("/");
         cookie.setMaxAge(0); // radera cookie
         response.addCookie(cookie);
