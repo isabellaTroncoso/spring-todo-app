@@ -11,7 +11,7 @@ services:
       - "8080:8080"
     depends_on:
       - db
-      - rabbit
+      #- rabbit
     environment:
       SPRING_PROFILES_ACTIVE: docker
 
@@ -21,10 +21,10 @@ services:
       SPRING_DATASOURCE_PASSWORD: 12345
 
       # ===== RABBITMQ =====
-      SPRING_RABBITMQ_HOST: rabbit
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: guest
-      SPRING_RABBITMQ_PASSWORD: guest
+      #SPRING_RABBITMQ_HOST: rabbit
+      #SPRING_RABBITMQ_PORT: 5672
+      #SPRING_RABBITMQ_USERNAME: guest
+      #SPRING_RABBITMQ_PASSWORD: guest
 
   db:
     image: postgres:16
@@ -39,13 +39,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  rabbit:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    restart: always
-    ports:
-      - "5672:5672"
-      - "15672:15672"
+  #rabbit:
+    #image: rabbitmq:3-management
+    #container_name: rabbitmq
+    #restart: always
+    #ports:
+     # - "5672:5672"
+     # - "15672:15672"
 
 volumes:
   postgres_data:

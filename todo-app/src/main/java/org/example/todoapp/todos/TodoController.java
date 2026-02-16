@@ -1,7 +1,7 @@
 package org.example.todoapp.todos;
 import jakarta.validation.Valid;
 //import org.example.todoapp.producer.EmailProducer;
-import org.example.todoapp.producer.EmailProducer;
+//import org.example.todoapp.producer.EmailProducer;
 import org.example.todoapp.todos.dto.TodoCreateDTO;
 import org.example.todoapp.todos.dto.TodoResponseDTO;
 import org.example.todoapp.todos.dto.TodoUpdateDTO;
@@ -25,16 +25,16 @@ public class TodoController {
     private final TodoService todoService;
     private final CustomUserRepository userRepository;
     private final TodoMapper todoMapper;
-    private final EmailProducer emailProducer;
+    //private final EmailProducer emailProducer;
 
     @Autowired
     public TodoController(TodoService todoService,
                           CustomUserRepository userRepository,
-                          TodoMapper todoMapper, EmailProducer emailProducer) {
+                          TodoMapper todoMapper /*EmailProducer emailProducer*/) {
         this.todoService = todoService;
         this.userRepository = userRepository;
         this.todoMapper = todoMapper;
-        this.emailProducer = emailProducer;
+        //this.emailProducer = emailProducer;
     }
 
     // ==================== GET USER TODOS ====================
@@ -62,8 +62,8 @@ public class TodoController {
         Todo saved = todoService.createTodo(todo);
 
         // Skicka meddelande till RabbitMQ
-        String message = String.format("User %s created a new todo: %s", user.getUsername(), todo.getTitle());
-        emailProducer.sendEmailMessage(message);
+        /*String message = String.format("User %s created a new todo: %s", user.getUsername(), todo.getTitle());
+        emailProducer.sendEmailMessage(message);*/
 
         return ResponseEntity.ok(todoMapper.toDTO(saved));
     }

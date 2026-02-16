@@ -1,6 +1,6 @@
 package org.example.todoapp.producer;
 
-import org.example.todoapp.config.RabbitConfig;
+/*import org.example.todoapp.config.RabbitConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -21,4 +21,4 @@ public class EmailProducer {
         log.info("Sent message to RabbitMQ: {}", message);
     }
 }
-
+*/

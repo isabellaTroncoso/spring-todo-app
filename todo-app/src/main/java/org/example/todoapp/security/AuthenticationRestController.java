@@ -4,7 +4,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 //import org.example.todoapp.config.RabbitConfig;
 import jakarta.validation.Valid;
-import org.example.todoapp.config.RabbitConfig;
+//import org.example.todoapp.config.RabbitConfig;
 import org.example.todoapp.security.jwt.JwtUtils;
 import org.example.todoapp.user.authority.UserRole;
 import org.example.todoapp.user.custom.CustomUser;
@@ -116,11 +116,11 @@ public class AuthenticationRestController {
         logger.info("Authentication successful for user: {}", customUserLoginDTO.username());
 
         // RabbitMQ
-        amqpTemplate.convertAndSend(
+        /*amqpTemplate.convertAndSend(
                 RabbitConfig.EXCHANGE_NAME,
                 RabbitConfig.ROUTING_KEY,
                 "User Logged in, todo: send email to user to alert them of login from weird IP addresses"
-        );
+        );*/
 
         // Step 5: Return token - Optional
         return ResponseEntity.ok(Map.of(

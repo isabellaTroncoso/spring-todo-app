@@ -8,7 +8,7 @@ import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@EnableRabbit
+/* @EnableRabbit
 @Configuration
 public class RabbitConfig {
     public static final String QUEUE_NAME = "email-queue";
@@ -33,7 +33,7 @@ public class RabbitConfig {
                 .with(ROUTING_KEY);
     }
 
-}
+}*/
 
 
 

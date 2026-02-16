@@ -1,5 +1,5 @@
 package org.example.todoapp.consumer;
-
+/*
 import org.example.todoapp.config.RabbitConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,3 +18,4 @@ public class EmailConsumer {
     }
 
 }
+*/
